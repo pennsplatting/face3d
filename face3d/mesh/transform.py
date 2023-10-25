@@ -146,7 +146,52 @@ def lookat_camera(vertices, eye, at = None, up = None):
     R = np.stack((x_aixs, y_axis, z_aixs))#, axis = 0) # 3 x 3
     transformed_vertices = vertices - eye # translation
     transformed_vertices = transformed_vertices.dot(R.T) # rotation
+
+    # Xuyi: the above R and T is representing W2C!! To get camera pose we can just use its inveres to get w2c!!!
+    
     return transformed_vertices
+
+def lookat_camera_return_c2w(vertices, eye, at = None, up = None):
+    """ 'look at' transformation: from world space to camera space
+    standard camera space: 
+        camera located at the origin. 
+        looking down negative z-axis. 
+        vertical vector is y-axis.
+    Xcam = R(X - C)
+    Homo: [[R, -RC], [0, 1]]
+    Args:
+      vertices: [nver, 3] 
+      eye: [3,] the XYZ world space position of the camera.
+      at: [3,] a position along the center of the camera's gaze.
+      up: [3,] up direction 
+    Returns:
+      transformed_vertices: [nver, 3]
+    """
+    if at is None:
+      at = np.array([0, 0, 0], np.float32)
+    if up is None:
+      up = np.array([0, 1, 0], np.float32)
+
+    eye = np.array(eye).astype(np.float32)
+    at = np.array(at).astype(np.float32)
+    z_aixs = -normalize(at - eye) # look forward
+    x_aixs = normalize(np.cross(up, z_aixs)) # look right
+    y_axis = np.cross(z_aixs, x_aixs) # look up
+
+    R = np.stack((x_aixs, y_axis, z_aixs))#, axis = 0) # 3 x 3
+    transformed_vertices = vertices - eye # translation
+    transformed_vertices = transformed_vertices.dot(R.T) # rotation
+
+    # Xuyi: the above R and T is representing W2C!! To get camera pose we can just use its inveres to get w2c!!!
+    c2w = np.eye(4)
+    c2w[:3,:3] = np.linalg.inv(R)
+    opencv = True
+    c2w[:3,3] = eye 
+    if opencv:
+        print(c2w)
+        c2w[1:3,:] *= -1
+        print(c2w)
+    return c2w
 
 ## --------- 3d-2d project. from camera space to image plane
 # generally, image plane only keeps x,y channels, here reserve z channel for calculating z-buffer.

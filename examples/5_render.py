@@ -93,9 +93,9 @@ if not os.path.exists(save_folder):
 vertices, colors, uv_coords = image_vertices.astype(np.float32).copy(), colors.astype(np.float32).copy(), uv_coords.astype(np.float32).copy()
 
 st = time()
-mesh_numpy.io.write_obj_with_colors_texture(os.path.join(save_folder, 'numpy.obj'), vertices, triangles, colors, texture, uv_coords)
+mesh_numpy.io.write_obj_with_colors_texture(os.path.join(save_folder, 'numpy.obj'), vertices, triangles, (colors * 255).astype(np.uint8), (texture * 255).astype(np.uint8), uv_coords)
 print('----------write obj numpy: ', time() - st)
 
 st = time()
-mesh.io.write_obj_with_colors_texture(os.path.join(save_folder, 'cython.obj'), vertices, triangles, colors, texture, uv_coords)
+mesh.io.write_obj_with_colors_texture(os.path.join(save_folder, 'cython.obj'), vertices, triangles, (colors * 255).astype(np.uint8), (texture * 255).astype(np.uint8), uv_coords)
 print('----------write obj cython: ', time() - st)

@@ -17,7 +17,8 @@ from face3d.morphable_model import MorphabelModel
 
 # --------------------- Forward: parameters(shape, expression, pose) --> 3D obj --> 2D image  ---------------
 # --- 1. load model
-bfm = MorphabelModel('Data/BFM/Out/BFM.mat')
+# bfm = MorphabelModel('Data/BFM/Out/BFM.mat')
+bfm = MorphabelModel('Data/BFM/Out/BFM.mat') /home/xuyimeng/Repo/3DMM-Fitting-Pytorch/BFM/01_MorphableModel.mat
 print('init bfm model success')
 
 # --- 2. generate face mesh: vertices(represent shape) & colors(represent texture)

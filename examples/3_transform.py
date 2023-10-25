@@ -12,6 +12,8 @@ sys.path.append('..')
 import face3d
 from face3d import mesh
 
+from ipdb import set_trace as st
+
 def transform_test(vertices, obj, camera, h = 256, w = 256):
 	'''
 	Args:
@@ -28,6 +30,7 @@ def transform_test(vertices, obj, camera, h = 256, w = 256):
 
 		## world space to camera space. (Look at camera.) 
 		camera_vertices = mesh.transform.lookat_camera(transformed_vertices, camera['eye'], camera['at'], camera['up'])
+		c2w = mesh.transform.lookat_camera_return_c2w(transformed_vertices, camera['eye'], camera['at'], camera['up'])
 		## camera space to image space. (Projection) if orth project, omit
 		projected_vertices = mesh.transform.perspective_project(camera_vertices, camera['fovy'], near = camera['near'], far = camera['far'])
 		## to image coords(position in image)
@@ -67,7 +70,13 @@ for factor in np.arange(0.5, 1.2, 0.1):
 	obj['angles'] = [0, 0, 0]
 	obj['t'] = [0, 0, 0]
 	image = transform_test(vertices, obj, camera) 
-	io.imsave('{}/1_1_{:.2f}.jpg'.format(save_folder, factor), image)
+	io.imsave('{}/1_1_{:.2f}.jpg'.format(save_folder, factor), (np.squeeze(image) * 255).astype(np.uint8))
+	
+ 
+#  # Save the rendered image
+#     image_filename = '{}/image_{:03d}.jpg'.format(save_folder, i)
+#     io.imsave(image_filename, (np.squeeze(image) * 255).astype(np.uint8))
+#     print(f"Saved image: {image_filename}")
 
 # angles
 for i in range(3):
@@ -77,9 +86,12 @@ for i in range(3):
 		obj['angles'][i] = angle
 		obj['t'] = [0, 0, 0]
 		image = transform_test(vertices, obj, camera) 
-		io.imsave('{}/1_2_{}_{}.jpg'.format(save_folder, i, angle), image)
+		io.imsave('{}/1_2_{}_{}.jpg'.format(save_folder, i, angle), (np.squeeze(image) * 255).astype(np.uint8))
 subprocess.call('convert {} {}/1_*.jpg {}'.format(options, save_folder, save_folder + '/obj.gif'), shell=True)
 
+#### My precious!!!! TODO: 
+## TODO-1: get w2c from below, and save as c2w
+## TODO-2: once get the c2w, it is now in openGL, convert it to opencv as nerf
 ## 2. fix obj position(center=[0,0,0], front pose). change camera position&direction, using perspective projection(fovy fixed)
 obj['s'] = scale_init
 obj['angles'] = [0, 0, 0]
@@ -97,19 +109,19 @@ camera['up'] = [0, 1, 0] #
 for p in np.arange(500, 250-1, -40): # 0.5m->0.25m
 	camera['eye'] = [0, 0, p]  # stay in front of face
 	image = transform_test(vertices, obj, camera) 
-	io.imsave('{}/2_eye_1_{}.jpg'.format(save_folder, 1000-p), image)
+	io.imsave('{}/2_eye_1_{}.jpg'.format(save_folder, 1000-p), (np.squeeze(image) * 255).astype(np.uint8))
 
 # y-axis: eye from down to up, looking at the center of face
 for p in np.arange(-300, 301, 60): # up 0.3m -> down 0.3m
 	camera['eye'] = [0, p, 250] # stay 0.25m far
 	image = transform_test(vertices, obj, camera) 
-	io.imsave('{}/2_eye_2_{}.jpg'.format(save_folder, p/6), image)
+	io.imsave('{}/2_eye_2_{}.jpg'.format(save_folder, p/6), (np.squeeze(image) * 255).astype(np.uint8))
 
 # x-axis: eye from left to right, looking at the center of face
 for p in np.arange(-300, 301, 60): # left 0.3m -> right 0.3m
 	camera['eye'] = [p, 0, 250] # stay 0.25m far
 	image = transform_test(vertices, obj, camera) 
-	io.imsave('{}/2_eye_3_{}.jpg'.format(save_folder, -p/6), image)
+	io.imsave('{}/2_eye_3_{}.jpg'.format(save_folder, -p/6), (np.squeeze(image) * 255).astype(np.uint8))
 
 # up direction
 camera['eye'] = [0, 0, 250] # stay in front
@@ -124,10 +136,13 @@ for p in np.arange(-50, 51, 10):
 	# just imagine: rotating camera 20 degree clockwise, is equal to keeping camera fixed and rotating obj 20 degree anticlockwise.
 	camera['up'] = np.squeeze(up)
 	image = transform_test(vertices, obj, camera) 
-	io.imsave('{}/2_eye_4_{}.jpg'.format(save_folder, -p), image)
+	io.imsave('{}/2_eye_4_{}.jpg'.format(save_folder, -p), (np.squeeze(image) * 255).astype(np.uint8))
 
+st()
 subprocess.call('convert {} {}/2_*.jpg {}'.format(options, save_folder, save_folder + '/camera.gif'), shell=True)
 
 # -- delete jpg files
 print('gifs have been generated, now delete jpgs')
 subprocess.call('rm {}/*.jpg'.format(save_folder), shell=True)
+
+## TODO: save transformation.json as nerf
